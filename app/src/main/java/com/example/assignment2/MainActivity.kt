@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.BottomAppBar
@@ -34,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,6 +45,13 @@ import com.example.assignment2.ui.theme.Assignment2Theme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+
+data class Course(
+    val courseNumber : String,
+    var courseDepartment : String,
+    var courseLocation : String
+
+)
 
 class MyViewModel : ViewModel() {
     private val _mutableCourses = MutableStateFlow(value = listOf<Course>())
@@ -58,7 +68,8 @@ class MyViewModel : ViewModel() {
 
     private val _expandedCourseNumber = MutableStateFlow<String?>(null)
     val expandedCourseNumberReadOnly: StateFlow<String?> = _expandedCourseNumber
-
+    var inEditMode by mutableStateOf(false)
+    val INVALIDCN = "-1"
     /**
      * Setter for number field
      */
@@ -90,12 +101,25 @@ class MyViewModel : ViewModel() {
         updateLocationField(location)
     }
 
+    fun clearFields(){
+        updateNumberField("")
+        updateDeptField("")
+        updateLocationField("")
+    }
+
+
     /**
      * Add a course to the course list in viewmodel
      */
-    fun addCourse(number: String, department: String, location: String, isExpanded: Boolean) {
-        if (_mutableCourses.value.find({ it.courseNumber == number }) != null) return
-        _mutableCourses.value += Course(number, department, location)
+    fun addCourse(number: String, department: String, location: String) {
+        removeCourse(INVALIDCN)
+
+        if (_mutableCourses.value.find { it.courseNumber == number } == null) {
+            _mutableCourses.value  += Course(number, department, location)
+            return
+        }
+        updateCourse(number, department, location)
+
     }
 
     /**
@@ -108,7 +132,7 @@ class MyViewModel : ViewModel() {
             currentCourseList.map { existingCourse ->
                 if (existingCourse.courseNumber == number) {
                     existingCourse.copy(
-                        courseDepartment = newDepartment, courseLocation = newLocation
+                        courseNumber = number, courseDepartment = newDepartment, courseLocation = newLocation
                     )
 
                 } else {
@@ -125,32 +149,15 @@ class MyViewModel : ViewModel() {
         _mutableCourses.value = _mutableCourses.value.filterNot({ it.courseNumber == number })
     }
 
-
-    fun getCourseInfo(courseNumber: String): Course {
-        val lookup = _mutableCourses.value.find({ it.courseNumber == courseNumber })
-        if (lookup != null) {
-            return lookup
-        }
-        return Course("", "", "")
+    fun setEditMode(editMode: Boolean) {
+        inEditMode = editMode
     }
 
-    /**
-     * View model helper to change the state of the vm to indicate that the course associated with
-     * the given string should be expanded.
-     * @param courseNumber : The course number corresponding with the Card that should be expanded
-     *
-     */
-    fun toggleCourseExpansion(courseNumber: String ) {
-
-        val previousValue = _expandedCourseNumber.value // store previous (for debug)
-        if (previousValue == courseNumber ) {
-            _expandedCourseNumber.value = null // the same course is selected we minimize the card
-            return
-        }
+    fun setExpandedCourse(courseNumber: String?) {
+        if(_expandedCourseNumber.value == INVALIDCN)
+            removeCourse(INVALIDCN)
         _expandedCourseNumber.value = courseNumber
     }
-
-    var inEditMode by mutableStateOf(false)
 
 }
 
@@ -166,11 +173,11 @@ class MainActivity : ComponentActivity() {
                         MyBottomBar(vm, {}, {}, {})
                     }) { innerPadding ->
                     Column(modifier = Modifier.padding(30.dp)) {
-                        CourseFields(vm)
                         CourseList(
                             vm, modifier = Modifier
                                 .padding(innerPadding)
-                                .fillMaxSize()
+                                .fillMaxHeight()
+
                         )
                     }
                 }
@@ -178,57 +185,41 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
-    @Composable
-    fun CourseFields(vm: MyViewModel) {
-        val numberInput by vm.courseNumberReadOnly.collectAsState()
-        val deptInput by vm.courseDeptReadOnly.collectAsState()
-        val locationInput by vm.courseLocationReadOnly.collectAsState()
-        Row {
-            Modifier.fillMaxWidth()
-            TextField(
-                value = numberInput, onValueChange = { newText ->
-                    vm.updateNumberField(newText)
-                }, label = { Text("Course Number") }, modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            )
-            TextField(
-                value = deptInput, onValueChange = { newText ->
-                    vm.updateDeptField(newText)
-                }, label = { Text("Department") }, modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            )
-        }
-        TextField(
-            value = locationInput, onValueChange = { newText ->
-                vm.updateLocationField(newText)
-            }, label = { Text("Course Location") }, modifier = Modifier.fillMaxWidth()
-        )
-
-    }
-
     // Ensure necessary imports are present at the top of your .kt file
-// (e.g., androidx.compose.material3.*, androidx.compose.runtime.*, androidx.compose.ui.*, etc.)
+    // (e.g., androidx.compose.material3.*, androidx.compose.runtime.*, androidx.compose.ui.*, etc.)
 
     @Composable
     fun ClickableCourse(
         course: Course,
-        isExpanded: Boolean,
         onItemClick: (Course) -> Unit,
         vm: MyViewModel
     ) {
-        val elevation = animateDpAsState(if (isExpanded) 8.dp else 2.dp, label = "elevation_card")
-        val courses by vm.coursesReadOnly.collectAsState()
+        val isExpanded = course.courseNumber == vm.expandedCourseNumberReadOnly.collectAsState().value
+
+        val courseNumberForTextField by vm.courseNumberReadOnly.collectAsState() // Correct way to get the value for TextField
+        val courseDepartmentForTextField by vm.courseDeptReadOnly.collectAsState()
+        val courseLocationForTextField by vm.courseLocationReadOnly.collectAsState()
+
+        val elevation = animateDpAsState(if (isExpanded)
+            8.dp else 2.dp, label = "elevation_card")
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp, horizontal = 8.dp),
+                .padding(vertical = 4.dp, horizontal = 8.dp) // make height more appropriate
+                .height(500.dp)
+               ,
             elevation = CardDefaults.cardElevation(defaultElevation = elevation.value),
             onClick = {
+                if(vm.inEditMode) vm.setEditMode(false)
+                if(vm.expandedCourseNumberReadOnly.value == course.courseNumber) {
+                    vm.setExpandedCourse(null)
 
-                vm.toggleCourseExpansion(course.courseNumber)
+                    // This return statement was autofilled by copilot and causes the card to
+                    // collapse, which is the behavior I wanted to achieve, so I kept it.
+                    return@Card
+                }
+
+                vm.setExpandedCourse(course.courseNumber)
                 onItemClick(course)
             }
         ) {
@@ -244,7 +235,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "${course.courseDepartment} ${course.courseNumber}",
+                            text = if(course.courseNumber == vm.INVALIDCN) "" else "${course.courseDepartment} ${course.courseNumber}",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -254,7 +245,7 @@ class MainActivity : ComponentActivity() {
                                 text = "Location: ${course.courseLocation}",
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, // Kept specific import path for TextOverflow for clarity
+                                overflow = TextOverflow.Ellipsis, // Kept specific import path for TextOverflow for clarity
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -263,40 +254,90 @@ class MainActivity : ComponentActivity() {
 
                 AnimatedVisibility(visible = isExpanded) {
                     Column(modifier = Modifier.padding(top = 12.dp)) {
-                        Text(
-                            "Detailed Report:",
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
-                        DetailItem(label = "Course Number", value = course.courseNumber)
-                        DetailItem(label = "Department", value = course.courseDepartment)
-                        DetailItem(label = "Full Location", value = course.courseLocation.ifBlank { "N/A" })
+                        if (vm.inEditMode) {
+                            val headerText = if (course.courseNumber == vm.INVALIDCN) "Add Course" else "Edit Course Details"
+                            Text(
+                                headerText,
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            )
+                            TextField(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                                value = courseNumberForTextField,
+                                onValueChange = { newNumber ->
+                                    vm.updateNumberField(newNumber)
+                                },
+                                label = { Text("Course Number") }
+                            )
+                            TextField(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                                value = courseDepartmentForTextField,
+                                onValueChange = { newDept ->
+                                    vm.updateDeptField(newDept)
+                                },
+                                label = { Text("Course Department") }
+                            )
+                            TextField(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                                value = courseLocationForTextField,
+                                onValueChange = { newLocation ->
+                                    vm.updateLocationField(newLocation)
+                                },
+                                label = { Text("Course Location") }
+                            )
+
+                        } else {
+                            Text(
+                                "Detailed Report:",
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            )
+                            DetailItem(label = "Course Number", value = course.courseNumber)
+                            DetailItem(label = "Department", value = course.courseDepartment)
+                            DetailItem(
+                                label = "Full Location",
+                                value = course.courseLocation.ifBlank { "N/A" })
 
 
+                        }
+                            Spacer(Modifier.height(8.dp))
+                        Row{
+                            Button(
+                                onClick = {
+                                    vm.addCourse(
+                                        courseNumberForTextField,
+                                        courseDepartmentForTextField,
+                                        courseLocationForTextField
+                                    )
+                                    // handle when we are saving
+                                    if (vm.inEditMode) {
+                                        vm.setExpandedCourse(null)
+                                        println("Save Clicked: \n Size of course list: ${vm.coursesReadOnly.value.size}, \n Course currently expanded should be null : ${vm.expandedCourseNumberReadOnly.value}")
 
-                        Spacer(Modifier.height(8.dp))
-                        Button(
-                            onClick = {
+                                    }
+
+                                    vm.setEditMode(!vm.inEditMode)
+                                }, modifier = Modifier.fillMaxWidth().weight(1f)
+
+                            ) {
                                 if (vm.inEditMode) {
-                                    vm.updateCourse(course.courseNumber, vm.courseDeptReadOnly.value,
-                                        vm.courseLocationReadOnly.value)
+                                    Text("Save")
+
+
+                                } else {
+                                    Text("Edit Details")
                                 }
-                                else {
-                                    //course.courseDepartment = vm.courseDeptReadOnly.value
-                                    vm.updateAllFields(course.courseNumber, course.courseDepartment, course.courseLocation)
-
-                                }
-                                vm.inEditMode = !vm.inEditMode
-                            },
-                            modifier = Modifier.align(Alignment.End)
-                        ) {
-                            if (vm.inEditMode) {
-                                Text("Save")
-
-                            } else {
-                                Text("Edit Details")
-
                             }
+                            Spacer(Modifier.width(8.dp))
+                                Button(
+                                    onClick = { vm.removeCourse(course.courseNumber) },
+                                    modifier = Modifier.fillMaxWidth().weight(1f)
+                                ) {
+
+                                    Text("Remove")
+                                }
+
+
 
                         }
                     }
@@ -326,8 +367,6 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun CourseList(vm: MyViewModel, modifier: Modifier = Modifier) {
         val courses by vm.coursesReadOnly.collectAsState()
-        println("CourseList RECOMPOSING - expandedCourseNumber from VM: $vm.expandedCourseNumberReadOnly.value") // <<< ADD THIS LOG
-        val context = LocalContext.current
         if (courses.isEmpty()) {
             Box(
                 modifier = modifier
@@ -354,23 +393,19 @@ class MainActivity : ComponentActivity() {
             ) { courseItem ->
                 val shouldBeExpanded = courseItem.courseNumber == vm.expandedCourseNumberReadOnly.collectAsState().value
 
-                println("CourseList ITEM - Course: ${courseItem.courseNumber}, shouldBeExpanded: $shouldBeExpanded (comparing with '${vm.expandedCourseNumberReadOnly}')") // <<< ADD THIS LOG
                 ClickableCourse(
                     vm = vm,
                     course = courseItem,
-                    isExpanded = shouldBeExpanded,
                     onItemClick = { clickedCourse ->
-
+                        vm.setExpandedCourse(clickedCourse.courseNumber)
                         vm.updateAllFields(clickedCourse.courseNumber, clickedCourse.courseDepartment, clickedCourse.courseLocation)
-                        vm.toggleCourseExpansion(clickedCourse.courseNumber)
-                        println("Course ${clickedCourse.courseNumber} clicked. Should be expanded? $shouldBeExpanded")
+
 
 
                     })
 
 
             }
-
         }
     }
 
@@ -386,46 +421,26 @@ class MainActivity : ComponentActivity() {
     ) {
         // Referenced Android Kotlin documentation for bottom bar scaffold :
         // https://developer.android.com/develop/ui/compose/quick-guides/content/display-bottom-app-bar
-        val numberInput by vm.courseNumberReadOnly.collectAsState()
-        val deptInput by vm.courseDeptReadOnly.collectAsState()
-        val locationInput by vm.courseLocationReadOnly.collectAsState()
         BottomAppBar(
             modifier = Modifier.fillMaxWidth(), actions = {
                 Row {
                     Modifier.fillMaxWidth()
                     Button(
                         onClick = {
+                            vm.clearFields()
                             vm.addCourse(
-                                numberInput, deptInput, locationInput, false
+                                vm.INVALIDCN, "", ""
                             )
+                            vm.setEditMode(true)
+                            vm.setExpandedCourse(vm.INVALIDCN)
                         }, modifier = Modifier
                             .padding(5.dp)
                             .weight(1f)
-                            .fillMaxSize()
+
                     ) {
                         Text(text = "Add New", fontSize = 18.sp)
                     }
-
-
-
-                    Button(
-                        onClick = { vm.removeCourse(vm.courseNumberReadOnly.value) },
-                        modifier = Modifier
-                            .padding(5.dp)
-                            .weight(1f)
-                            .fillMaxSize()
-
-                    ) {
-                        Text(text = "Remove", textAlign = TextAlign.Center, fontSize = 18.sp)
-                    }
                 }
             })
-    }
-
-
-    @Preview(showBackground = true)
-    @Composable
-    fun GreetingPreview() {
-        Assignment2Theme {}
     }
 }
