@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -69,6 +70,7 @@ class MyViewModel : ViewModel() {
     private val _expandedCourseNumber = MutableStateFlow<String?>(null)
     val expandedCourseNumberReadOnly: StateFlow<String?> = _expandedCourseNumber
     var inEditMode by mutableStateOf(false)
+
     val INVALIDCN = "-1"
     /**
      * Setter for number field
@@ -169,10 +171,15 @@ class MainActivity : ComponentActivity() {
             Assignment2Theme {
                 val vm = MyViewModel()
                 Scaffold(
-                    modifier = Modifier.fillMaxSize(), bottomBar = {
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
                         MyBottomBar(vm, {}, {}, {})
                     }) { innerPadding ->
-                    Column(modifier = Modifier.padding(30.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize()
+                            .padding(horizontal = 30.dp, vertical = 10.dp)) {
                         CourseList(
                             vm, modifier = Modifier
                                 .padding(innerPadding)
@@ -204,9 +211,9 @@ class MainActivity : ComponentActivity() {
             8.dp else 2.dp, label = "elevation_card")
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp, horizontal = 8.dp) // make height more appropriate
-                .height(500.dp)
+                .fillMaxSize()
+                .padding(vertical = 20.dp, horizontal = 8.dp) // make height more appropriate
+
                ,
             elevation = CardDefaults.cardElevation(defaultElevation = elevation.value),
             onClick = {
@@ -223,31 +230,37 @@ class MainActivity : ComponentActivity() {
                 onItemClick(course)
             }
         ) {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(
+                        top = 10.dp,
+                        start = 10.dp,
+                        end = 10.dp,
+                        bottom = 10.dp
+                    )
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalAlignment = if(!isExpanded) Alignment.CenterVertically else Alignment.Top
+                    ,
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = if(course.courseNumber == vm.INVALIDCN) "" else "${course.courseDepartment} ${course.courseNumber}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        if (!isExpanded && course.courseLocation.isNotBlank()) {
-                            Spacer(Modifier.height(4.dp))
+                    Column(modifier = Modifier
+                        .weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        if(course.courseNumber != vm.INVALIDCN) {
                             Text(
-                                text = "Location: ${course.courseLocation}",
-                                style = MaterialTheme.typography.bodySmall,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis, // Kept specific import path for TextOverflow for clarity
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                                textAlign = TextAlign.Center,
+                                text = "${course.courseDepartment} ${course.courseNumber}",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 40.sp,
+
+
+                                )
                         }
                     }
                 }
@@ -295,7 +308,7 @@ class MainActivity : ComponentActivity() {
                             DetailItem(label = "Course Number", value = course.courseNumber)
                             DetailItem(label = "Department", value = course.courseDepartment)
                             DetailItem(
-                                label = "Full Location",
+                                label = "Location",
                                 value = course.courseLocation.ifBlank { "N/A" })
 
 
@@ -333,7 +346,6 @@ class MainActivity : ComponentActivity() {
                                     onClick = { vm.removeCourse(course.courseNumber) },
                                     modifier = Modifier.fillMaxWidth().weight(1f)
                                 ) {
-
                                     Text("Remove")
                                 }
 
@@ -377,6 +389,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 Text(text = "No courses to display")
             }
+            vm.setEditMode(false)
             return
         }
         LazyColumn(
@@ -433,10 +446,10 @@ class MainActivity : ComponentActivity() {
                             )
                             vm.setEditMode(true)
                             vm.setExpandedCourse(vm.INVALIDCN)
-                        }, modifier = Modifier
+                        }, enabled = !vm.inEditMode
+                         ,modifier = Modifier
                             .padding(5.dp)
                             .weight(1f)
-
                     ) {
                         Text(text = "Add New", fontSize = 18.sp)
                     }
