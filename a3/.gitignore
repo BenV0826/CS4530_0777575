@@ -1,0 +1,37 @@
+### OS ###
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Gradle ###
+.gradle/
+build/
+**/build/
+
+### Android Studio ###
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/gradle.xml
+.idea/misc.xml
+*.iml
+
+### Local Config ###
+local.properties
+
+### Logs ###
+*.log
+
+### Generated Files ###
+captures/
+.externalNativeBuild/
+.cxx/
