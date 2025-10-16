@@ -38,15 +38,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.example.assignment3.ui.theme.Assignment3Theme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 
+@Entity
 data class Course(
-    val courseNumber : String,
-    var courseDepartment : String,
-    var courseLocation : String
+    @PrimaryKey val courseNumber : String,
+    @ColumnInfo( name = "course_department" ) var courseDepartment : String,
+    @ColumnInfo ( name = "course_location" ) var courseLocation : String
 
 )
 
