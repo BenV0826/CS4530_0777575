@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.mediation.test.suite)
     val room_version = "2.8.2"
     implementation("androidx.room:room-runtime:$room_version")
     ksp("androidx.room:room-compiler:$room_version")
