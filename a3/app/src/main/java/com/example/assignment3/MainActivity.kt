@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
@@ -36,21 +37,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModelProvider
 import com.example.assignment3.data.local.Course
 import com.example.assignment3.ui.theme.Assignment3Theme
-import com.google.android.ads.mediationtestsuite.viewmodels.ViewModelFactory
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
 
+    private val vm: MyViewModel by viewModels {
         val repository = (application as CourseApplication).repository
+        ViewModelFactory(repository)
+    }
+    override fun onCreate(savedInstanceState: Bundle?) {
 
-        val factory = ViewModelFactory(repository)
-
-        val vm = ViewModelProvider(this, factory)[MyViewModel::class.java]
-
+        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             Assignment3Theme {
@@ -142,7 +140,9 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(bottom = 6.dp)
                             )
                             TextField(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp),
                                 value = courseNumberForTextField,
                                 onValueChange = { newNumber ->
                                     vm.updateNumberField(newNumber)
@@ -150,7 +150,9 @@ class MainActivity : ComponentActivity() {
                                 label = { Text("Course Number") }
                             )
                             TextField(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp),
                                 value = courseDepartmentForTextField,
                                 onValueChange = { newDept ->
                                     vm.updateDeptField(newDept)
@@ -158,7 +160,9 @@ class MainActivity : ComponentActivity() {
                                 label = { Text("Course Department") }
                             )
                             TextField(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp),
                                 value = courseLocationForTextField,
                                 onValueChange = { newLocation ->
                                     vm.updateLocationField(newLocation)
@@ -192,14 +196,18 @@ class MainActivity : ComponentActivity() {
                                         vm.setExpandedCourse(null)
                                     }
                                     vm.setEditMode(!vm.inEditMode)
-                                }, modifier = Modifier.fillMaxWidth().weight(1f)
+                                }, modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
                             ) {
                                 Text(if (vm.inEditMode) "Save" else "Edit Details")
                             }
                             Spacer(Modifier.width(8.dp))
                             Button(
                                 onClick = { vm.removeCourse(course) },
-                                modifier = Modifier.fillMaxWidth().weight(1f)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
                             ) {
                                 Text("Remove")
                             }
@@ -231,16 +239,14 @@ class MainActivity : ComponentActivity() {
         val courses by vm.coursesReadOnly.collectAsState()
         val expandedCourseNumber by vm.expandedCourseNumberReadOnly.collectAsState()
 
-        // Show placeholder text only if there are no courses and the "Add New" card isn't shown
         if (courses.isEmpty() && expandedCourseNumber != vm.INVALIDCN) {
             Box(
                 modifier = modifier
                     .fillMaxSize()
                     .padding(16.dp), contentAlignment = Alignment.Center
             ) {
-                Text(text = "No courses to display. Click \"Add New\" to begin.")
+                Text(text = "No courses to display")
             }
-            // Don't return here, so the LazyColumn is always composed.
         }
 
         LazyColumn(
@@ -249,14 +255,12 @@ class MainActivity : ComponentActivity() {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Show the "Add Course" card if the user has clicked "Add New"
             if (expandedCourseNumber == vm.INVALIDCN) {
                 item {
                     ClickableCourse(
                         vm = vm,
-                        // A temporary course object for the UI
                         course = Course(vm.INVALIDCN, "", ""),
-                        onItemClick = { /* Do nothing for the new course card */ }
+                        onItemClick = {  }
                     )
                 }
             }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class MyViewModel(private val repository: Repository) : ViewModel() {
 
@@ -60,11 +61,16 @@ class MyViewModel(private val repository: Repository) : ViewModel() {
 
     fun upsertCourse(number: String, department: String, location: String) {
         val course = Course(number, department, location)
-        repository.addCourse(course)
+        viewModelScope.launch {
+            repository.addCourse(course)
+        }
     }
 
     fun removeCourse(course: Course) {
-        repository.deleteCourse(course)
+        viewModelScope.launch {
+            repository.deleteCourse(course)
+        }
+        setExpandedCourse(null)
     }
 
     fun setEditMode(editMode: Boolean) {
