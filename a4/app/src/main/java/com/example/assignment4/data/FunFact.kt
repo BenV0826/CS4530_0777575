@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable @Entity
 data class FunFact(
-    @PrimaryKey(autoGenerate = true)
-    val id : Int = 0,
+    @PrimaryKey
+    val id : String,
     var text : String,
     var source_url : String?=null)

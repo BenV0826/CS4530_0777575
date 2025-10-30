@@ -23,9 +23,6 @@ import kotlinx.serialization.json.Json
 class FunFactViewModel (private val funFactRepository  : FunFactRepository): ViewModel() {
 
 
-
-
-
     private val client = HttpClient() {
         install(ContentNegotiation) {
             json(Json {
@@ -35,8 +32,6 @@ class FunFactViewModel (private val funFactRepository  : FunFactRepository): Vie
 
         }
     }
-    private val _factList = MutableStateFlow(listOf<String>())
-    val factList : StateFlow<List<String>> = _factList
 
     val allFacts : StateFlow<List<FunFact>> = funFactRepository.allFacts.stateIn(
         scope = funFactRepository.scope,
@@ -46,10 +41,10 @@ class FunFactViewModel (private val funFactRepository  : FunFactRepository): Vie
     )
 
 
-    suspend fun addFact (item: String){
+    suspend fun getFact (){
         try{
             val responseText: FunFact = client.get("https://uselessfacts.jsph.pl//api/v2/facts/random.json?language=en").body()
-            _factList.value = _factList.value + responseText.text
+            funFactRepository.addFact(responseText)
         }
         catch (e: Exception)
         {
