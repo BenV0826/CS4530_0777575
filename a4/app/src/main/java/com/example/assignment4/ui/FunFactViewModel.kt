@@ -1,8 +1,12 @@
 package com.example.assignment4.ui
 
 import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.*
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.assignment4.FunFactApplication
 import com.example.assignment4.data.FunFact
 import com.example.assignment4.data.FunFactRepository
 import io.ktor.client.HttpClient
@@ -16,10 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.serialization.json.Json
 
-class ViewMode (private val repository : FunFactRepository) {
-
-
-
+class FunFactViewModel (private val funFactRepository  : FunFactRepository): ViewModel() {
 
 
 
@@ -37,8 +38,8 @@ class ViewMode (private val repository : FunFactRepository) {
     private val _factList = MutableStateFlow(listOf<String>())
     val factList : StateFlow<List<String>> = _factList
 
-    val allFacts : StateFlow<List<FunFact>> = repository.allFacts.stateIn(
-        scope = repository.scope,
+    val allFacts : StateFlow<List<FunFact>> = funFactRepository.allFacts.stateIn(
+        scope = funFactRepository.scope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = emptyList()
 
@@ -58,11 +59,17 @@ class ViewMode (private val repository : FunFactRepository) {
 
 }
 
+// ... (rest of your file is correct)
+
 object FunFactViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
+            // 1. Get the application instance from the initializer's context.
+            val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FunFactApplication)
+
+            // 2. Instantiate FunFactViewModel without the incorrect generic type.
             FunFactViewModel(
-                (this[AndroidviewModelFactory.APPLICATION_KEY] as FunFact])
+                funFactRepository = application.funFactRepository
             )
         }
     }

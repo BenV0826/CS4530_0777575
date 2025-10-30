@@ -10,14 +10,14 @@ import kotlinx.coroutines.flow.Flow
 @Database(entities = [FunFact::class], version = 1, exportSchema = false)
 abstract class FunFactDatabase : RoomDatabase() {
     abstract fun funFactDao(): FunFactDao
-
+}
 
     @Dao
     interface FunFactDao {
         @Insert
         suspend fun addFunFact(fact: FunFact)
 
-        @Query("SELECT * from funFact ORDER BY id DESC LIMIT 1" )
+        @Query("SELECT * from funFact ORDER BY id DESC" )
         fun factList() : Flow<List<FunFact>>
 
 
@@ -25,4 +25,3 @@ abstract class FunFactDatabase : RoomDatabase() {
 
 
 
-}

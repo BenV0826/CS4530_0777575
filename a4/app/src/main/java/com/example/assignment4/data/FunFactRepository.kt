@@ -8,7 +8,8 @@ import java.util.Date
 import kotlin.random.Random
 
 class FunFactRepository(val scope : CoroutineScope,
-                        private val dao : FunFactDatabase.FunFactDao) {
+                        private val dao : FunFactDao
+) {
     val allFacts = dao.factList()
     fun getFact(){
         scope.launch {
