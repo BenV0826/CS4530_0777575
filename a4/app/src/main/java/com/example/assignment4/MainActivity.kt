@@ -8,12 +8,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -24,6 +27,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.assignment4.ui.FunFactViewModel
@@ -41,7 +45,6 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            //val facts by vm.allFacts.collectAsState()
             val coroutineScope = rememberCoroutineScope()
             val allFacts by vm.allFacts.collectAsState(initial = emptyList())
 
@@ -50,9 +53,10 @@ class MainActivity : ComponentActivity() {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding)
+                            .padding(paddingValues = innerPadding)
                             .background(Color.LightGray),
-                        horizontalAlignment = CenterHorizontally
+                        horizontalAlignment = CenterHorizontally,
+
                     ) {
                         Button(
                             onClick = {
@@ -69,16 +73,18 @@ class MainActivity : ComponentActivity() {
 
                         LazyColumn(modifier = Modifier
                             .fillMaxSize()
-                            .border(2.dp, Color.Black)
-                            .padding(4.dp)
-                        , horizontalAlignment = CenterHorizontally) {
-                           items(allFacts) { fact ->
-                               Text(fact.text)
+                            .padding(horizontal =4.dp, vertical = 20.dp)
+                        , horizontalAlignment = CenterHorizontally
+                        , verticalArrangement = spacedBy(8.dp)) {
+                           items(items = allFacts) { fact ->
+                               Box(modifier = Modifier
+                                   .fillMaxWidth()
+                                   .border(2.dp, Color.Black, shape = RoundedCornerShape(8.dp))
+                                   .padding(8.dp)) {
+                                   Text(fact.text)
+                               }
                            }
                         }
-//                    }
-//                }
-//            }
                     }
                 }
             }
