@@ -22,17 +22,6 @@ import kotlinx.serialization.json.Json
 
 class FunFactViewModel (private val funFactRepository  : FunFactRepository): ViewModel() {
 
-
-    private val client = HttpClient() {
-        install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            })
-
-        }
-    }
-
     val allFacts : StateFlow<List<FunFact>> = funFactRepository.allFacts.stateIn(
         scope = funFactRepository.scope,
         started = SharingStarted.WhileSubscribed(),
@@ -43,8 +32,7 @@ class FunFactViewModel (private val funFactRepository  : FunFactRepository): Vie
 
     suspend fun getFact (){
         try{
-            val responseText: FunFact = client.get("https://uselessfacts.jsph.pl//api/v2/facts/random").body()
-            funFactRepository.addFact(responseText)
+            funFactRepository.getFact()
         }
         catch (e: Exception)
         {
@@ -54,15 +42,10 @@ class FunFactViewModel (private val funFactRepository  : FunFactRepository): Vie
 
 }
 
-// ... (rest of your file is correct)
-
 object FunFactViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
-            // 1. Get the application instance from the initializer's context.
             val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FunFactApplication)
-
-            // 2. Instantiate FunFactViewModel without the incorrect generic type.
             FunFactViewModel(
                 funFactRepository = application.funFactRepository
             )
