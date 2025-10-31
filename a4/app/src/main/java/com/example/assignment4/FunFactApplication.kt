@@ -6,20 +6,25 @@ import com.example.assignment4.data.FunFactDatabase
 import com.example.assignment4.data.FunFactRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlin.lazy
-
 
 class FunFactApplication : Application() {
     val scope = CoroutineScope(SupervisorJob())
 
+    lateinit var db: FunFactDatabase
+        private set
 
-    val db : FunFactDatabase by lazy {
-        Room.databaseBuilder(
+    lateinit var funFactRepository: FunFactRepository
+        private set
+
+    override fun onCreate() {
+        super.onCreate()
+
+        db = Room.databaseBuilder(
             applicationContext,
             FunFactDatabase::class.java,
             "fun_fact_database"
         ).build()
-    }
-    val funFactRepository by lazy { FunFactRepository(scope, db.funFactDao()) }
-}
 
+        funFactRepository = FunFactRepository(scope, db.funFactDao())
+    }
+}

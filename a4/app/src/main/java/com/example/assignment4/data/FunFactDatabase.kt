@@ -12,16 +12,18 @@ abstract class FunFactDatabase : RoomDatabase() {
     abstract fun funFactDao(): FunFactDao
 }
 
-    @Dao
-    interface FunFactDao {
-        @Insert
-        suspend fun addFunFact(fact: FunFact)
+@Dao
+interface FunFactDao {
+    @Insert
+    suspend fun addFunFact(fact: FunFact)
 
-        @Query("SELECT * from funFact ORDER BY id DESC" )
-        fun factList() : Flow<List<FunFact>>
+    @Query("SELECT * from funFact ORDER BY id DESC" )
+    fun factList() : Flow<List<FunFact>>
 
 
-    }
+
+
+}
 
 
 

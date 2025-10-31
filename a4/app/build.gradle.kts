@@ -2,10 +2,11 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
 
 }
-
+val room_version = "2.8.3" // Replace with the desired version
 android {
     namespace = "com.example.assignment4"
     compileSdk = 36
@@ -45,6 +46,8 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -58,7 +61,9 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.androidx.room.common.jvm)
+
+    ksp(libs.androidx.room.compiler)
+
     implementation(libs.androidx.room.ktx)
 
     testImplementation(libs.junit)

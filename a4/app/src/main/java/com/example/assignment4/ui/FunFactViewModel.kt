@@ -43,7 +43,7 @@ class FunFactViewModel (private val funFactRepository  : FunFactRepository): Vie
 
     suspend fun getFact (){
         try{
-            val responseText: FunFact = client.get("https://uselessfacts.jsph.pl//api/v2/facts/random.json?language=en").body()
+            val responseText: FunFact = client.get("https://uselessfacts.jsph.pl//api/v2/facts/random").body()
             funFactRepository.addFact(responseText)
         }
         catch (e: Exception)
