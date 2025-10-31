@@ -10,7 +10,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a9a0641d-96c4-4ee9-8046-30458d98d323" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/network/KtorClient.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/FunFactApplication.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/FunFactApplication.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/data/FunFactDatabase.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/data/FunFactDatabase.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/data/FunFactRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/data/FunFactRepository.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/ui/FunFactViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/ui/FunFactViewModel.kt" afterDir="false" />
     </list>
@@ -48,8 +52,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Kotlin Class" />
         <option value="Kotlin File" />
+        <option value="Kotlin Class" />
       </list>
     </option>
   </component>
@@ -97,7 +101,11 @@
       <recent name="$PROJECT_DIR$/app/src/main/java/com/example/assignment4/data/local" />
     </key>
     <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
-      <recent name="com.example.assignment4.ui.main" />
+      <recent name="com.example.assignment4.network" />
+      <recent name="" />
+      <recent name="com.example.assignment4" />
+      <recent name="com.example.assignment4.u" />
+      <recent name="com.example.assignment4.ui.mai" />
     </key>
   </component>
   <component name="RunManager">

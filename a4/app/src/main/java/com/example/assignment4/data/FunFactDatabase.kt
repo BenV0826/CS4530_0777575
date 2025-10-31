@@ -2,6 +2,7 @@ package com.example.assignment4.data
 
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.RoomDatabase
@@ -20,7 +21,8 @@ interface FunFactDao {
     @Query("SELECT * from funFact ORDER BY id DESC" )
     fun factList() : Flow<List<FunFact>>
 
-
+    @Query ("DELETE FROM funFact")
+    suspend fun clearFacts()
 
 
 }
