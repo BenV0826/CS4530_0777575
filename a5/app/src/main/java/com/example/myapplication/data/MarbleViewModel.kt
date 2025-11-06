@@ -6,18 +6,22 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.myapplication.MarbleApp
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class MarbleViewModel (private val repository : MarbleRepository) : ViewModel(){
+class MarbleViewModel (repository : MarbleRepository) : ViewModel(){
 
-    val gyroReading = repository.getGyroFlow()
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            GyroReading(0f,0f,0f)
-        )
+    private val _gyroReading = MutableStateFlow(SensorReading(0f, 0f, 0f))
+    val gyroReading : StateFlow<SensorReading> get() =_gyroReading
 
+    init {
+        viewModelScope.launch {
+            repository.getGyroFlow().collect { newSensorReading ->
+                _gyroReading.value = newSensorReading
+            }
+        }
+    }
     companion object {
         val Factory = viewModelFactory {
             initializer {

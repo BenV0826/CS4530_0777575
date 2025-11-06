@@ -1,14 +1,9 @@
 package com.example.myapplication
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.Px
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -19,22 +14,21 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.myapplication.data.MarbleViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
@@ -51,8 +45,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MyApplicationTheme {
-                Scaffold (
-                ) { innerPadding ->
+                Scaffold { innerPadding ->
                     val vm : MarbleViewModel = viewModel(factory = MarbleViewModel.Factory)
                     MarbleScreen(vm, modifier = Modifier.padding(innerPadding))
                 }
@@ -61,73 +54,73 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    @SuppressLint("UnusedBoxWithConstraintsScope")
+    @SuppressLint("UnusedBoxWithConstraintsScope", "UnrememberedMutableState")
     @Composable
-    fun MarbleScreen(viewModel : MarbleViewModel, modifier : Modifier = Modifier) {
-
-
+    fun MarbleScreen(viewModel: MarbleViewModel, modifier: Modifier = Modifier) {
         Column(modifier = Modifier.padding(8.dp)) {
             val gyroReading by viewModel.gyroReading.collectAsStateWithLifecycle()
 
             BoxWithConstraints(
                 modifier = modifier
                     .fillMaxSize()
-                    .weight(0.8f)
                     .padding(20.dp)
                     .border(1.dp, Color.Black)
             ) {
-                // Define the marble size once
                 val marbleSize = 50.dp
                 val marbleSizePx = with(LocalDensity.current) { marbleSize.toPx() }
 
-                val marbleOffset = remember {
+                val position = remember {
                     mutableStateOf(
-                        IntOffset(
-                            x = (constraints.maxWidth / 2f - marbleSizePx / 2f).roundToInt(),
-                            y = (constraints.maxHeight / 2f - marbleSizePx / 2f).roundToInt()
+                        Offset(
+                            x = (constraints.maxWidth / 2f) - (marbleSizePx / 2f),
+                            y = (constraints.maxHeight / 2f) - (marbleSizePx / 2f)
                         )
                     )
                 }
+                val velocity = remember { mutableStateOf(Offset.Zero) }
+                val alpha = 0.8f
+                val gravity = remember { mutableStateOf<Offset>(Offset.Zero)}
+                LaunchedEffect(Unit) {
+                    var lastFrameTimeNanos = System.nanoTime()
+                     // Used a while loop that constantly calculates the physics of the marble
+                    while (true) {
+                        withFrameNanos { frameTimeNanos ->
+                            val deltaTimeSeconds = (frameTimeNanos - lastFrameTimeNanos) / 1_000_000_000f
+                            lastFrameTimeNanos = frameTimeNanos
+                            gravity.value = Offset(
+                                x = alpha * gravity.value.x + (1 - alpha) * gyroReading.x,
+                                y = alpha * gravity.value.y + (1 - alpha) * gyroReading.y
+                            )
+                            val force = Offset(x = gravity.value.x * -1000f, y = gravity.value.y * 1000f)
 
+                            val friction = velocity.value * -3.5f
+                            val acceleration = force + friction
 
-                LaunchedEffect(gyroReading) {
+                            velocity.value += acceleration * deltaTimeSeconds
 
-                    val dx = gyroReading.z * 20
-                    val dy = gyroReading.x * 20
+                            val newPosition = position.value + velocity.value * deltaTimeSeconds
 
-                    val newX = (marbleOffset.value.x + dx).coerceIn(
-                        0f,
-                        constraints.maxWidth - marbleSizePx
-                    )
-                    val newY = (marbleOffset.value.y + dy).coerceIn(
-                        0f,
-                        constraints.maxHeight - marbleSizePx
-                    )
+                            position.value = Offset(
+                                x = newPosition.x.coerceIn(0f, constraints.maxWidth - marbleSizePx),
+                                y = newPosition.y.coerceIn(0f, constraints.maxHeight - marbleSizePx)
+                            )
 
-                    marbleOffset.value = IntOffset(newX.roundToInt(), newY.roundToInt())
+                            if (newPosition.y <= 0f || newPosition.y >= constraints.maxHeight - marbleSizePx) {
+                                velocity.value = Offset(velocity.value.x, velocity.value.y * -0.4f)
+                            }
+                            if (newPosition.x <= 0f || newPosition.x >= constraints.maxWidth - marbleSizePx) {
+                                velocity.value = Offset(velocity.value.x * -0.4f, velocity.value.y)
+                            }
+                        }
+                    }
                 }
-
-
                 Marble(
-                    modifier = Modifier.offset { marbleOffset.value },
+                    modifier = Modifier.offset { IntOffset(position.value.x.roundToInt(), position.value.y.roundToInt()) },
                     marbleSize = marbleSize
                 )
             }
-            Text(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(0.2f)
-                    .padding(horizontal = 24.dp), // Added padding for better alignment
-                text = "Gyro readings:\nx=${"%.2f".format(gyroReading.x)}, y=${"%.2f".format(gyroReading.y)}, z=${"%.2f".format(gyroReading.z)}",
-                style = MaterialTheme.typography.bodyLarge,
-                fontSize = 20.sp
-            )
         }
     }
-
-
-
-
 
     @Composable
     fun Marble(modifier : Modifier = Modifier, marbleSize : Dp) {
